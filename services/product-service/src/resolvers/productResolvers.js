@@ -289,6 +289,13 @@ const productResolvers = {
       }
     },
   },
+
+  Product: {
+    // Reference resolver for federation
+    __resolveReference: async (reference) => {
+      return await Product.findById(reference.id);
+    },
+  },
 };
 
 module.exports = productResolvers;

@@ -1,249 +1,152 @@
 const { gql } = require('graphql-tag');
 
 const typeDefs = gql`
+  extend schema
+    @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable", "@external"])
+
   scalar DateTime
   scalar JSON
 
-  # Product Types
-  type Product {
+  # Extended types from other services
+  type User @key(fields: "id") {
+    id: ID! @external
+    orders: [Order!]!
+  }
+
+  type Product @key(fields: "id") {
+    id: ID! @external
+  }
+
+  # Order Types
+  type Order @key(fields: "id") {
     id: ID!
-    name: String!
-    slug: String!
-    description: String!
-    shortDescription: String
-    price: Float!
-    compareAtPrice: Float
-    cost: Float
-    category: String!
-    subcategory: String
-    brand: String
-    images: [ProductImage!]!
-    stock: Int!
-    sku: String!
-    barcode: String
-    weight: Weight
-    dimensions: Dimensions
-    tags: [String!]!
-    features: [Feature!]!
-    specifications: JSON
-    isActive: Boolean!
-    isFeatured: Boolean!
-    seo: SEO
-    viewCount: Int!
-    salesCount: Int!
-    rating: Rating!
-    inStock: Boolean!
-    onSale: Boolean!
-    discountPercentage: Int!
+    orderNumber: String!
+    userId: ID!
+    user: User
+    status: OrderStatus!
+    subtotal: Float!
+    tax: Float!
+    shippingCost: Float!
+    discount: Float!
+    totalAmount: Float!
+    shippingAddress: ShippingAddress!
+    paymentMethod: PaymentMethod
+    paymentStatus: PaymentStatus!
+    paidAt: DateTime
+    trackingNumber: String
+    shippedAt: DateTime
+    deliveredAt: DateTime
+    cancelledAt: DateTime
+    cancellationReason: String
+    customerNotes: String
+    internalNotes: String
+    items: [OrderItem!]!
     createdAt: DateTime!
     updatedAt: DateTime!
   }
 
-  type ProductImage {
-    url: String!
-    alt: String
-    position: Int!
+  type OrderItem {
+    id: ID!
+    orderId: ID!
+    productId: ID!
+    product: Product
+    productName: String!
+    productSku: String!
+    productImage: String
+    unitPrice: Float!
+    quantity: Int!
+    subtotal: Float!
+    discount: Float!
+    total: Float!
   }
 
-  type Weight {
-    value: Float
-    unit: String
+  type ShippingAddress {
+    street: String!
+    city: String!
+    state: String
+    postalCode: String!
+    country: String!
   }
 
-  type Dimensions {
-    length: Float
-    width: Float
-    height: Float
-    unit: String
+  enum OrderStatus {
+    PENDING
+    CONFIRMED
+    PROCESSING
+    SHIPPED
+    DELIVERED
+    CANCELLED
+    REFUNDED
   }
 
-  type Feature {
-    name: String!
-    value: String!
+  enum PaymentMethod {
+    CREDIT_CARD
+    DEBIT_CARD
+    BANK_TRANSFER
+    CASH_ON_DELIVERY
+    E_WALLET
   }
 
-  type SEO {
-    title: String
-    description: String
-    keywords: [String!]
+  enum PaymentStatus {
+    PENDING
+    PAID
+    FAILED
+    REFUNDED
   }
 
-  type Rating {
-    average: Float!
-    count: Int!
+  input CreateOrderInput {
+    items: [OrderItemInput!]!
+    shippingAddressId: ID
+    shippingAddress: ShippingAddressInput
+    paymentMethod: PaymentMethod!
+    customerNotes: String
   }
 
-  # Pagination Types
-  type ProductConnection {
-    edges: [ProductEdge!]!
-    pageInfo: PageInfo!
-    totalCount: Int!
+  input OrderItemInput {
+    productId: ID!
+    quantity: Int!
   }
 
-  type ProductEdge {
-    node: Product!
-    cursor: String!
+  input ShippingAddressInput {
+    street: String!
+    city: String!
+    state: String
+    postalCode: String!
+    country: String!
   }
 
-  type PageInfo {
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-    startCursor: String
-    endCursor: String
+  input UpdateOrderStatusInput {
+    status: OrderStatus!
+    trackingNumber: String
+    internalNotes: String
   }
 
-  # Input Types
-  input CreateProductInput {
-    name: String!
-    description: String!
-    shortDescription: String
-    price: Float!
-    compareAtPrice: Float
-    cost: Float
-    category: String!
-    subcategory: String
-    brand: String
-    images: [ProductImageInput!]
-    stock: Int!
-    sku: String!
-    barcode: String
-    weight: WeightInput
-    dimensions: DimensionsInput
-    tags: [String!]
-    features: [FeatureInput!]
-    specifications: JSON
-    isFeatured: Boolean
-    seo: SEOInput
-  }
-
-  input UpdateProductInput {
-    name: String
-    description: String
-    shortDescription: String
-    price: Float
-    compareAtPrice: Float
-    cost: Float
-    category: String
-    subcategory: String
-    brand: String
-    images: [ProductImageInput!]
-    stock: Int
-    barcode: String
-    weight: WeightInput
-    dimensions: DimensionsInput
-    tags: [String!]
-    features: [FeatureInput!]
-    specifications: JSON
-    isActive: Boolean
-    isFeatured: Boolean
-    seo: SEOInput
-  }
-
-  input ProductImageInput {
-    url: String!
-    alt: String
-    position: Int
-  }
-
-  input WeightInput {
-    value: Float
-    unit: String
-  }
-
-  input DimensionsInput {
-    length: Float
-    width: Float
-    height: Float
-    unit: String
-  }
-
-  input FeatureInput {
-    name: String!
-    value: String!
-  }
-
-  input SEOInput {
-    title: String
-    description: String
-    keywords: [String!]
-  }
-
-  # Filter Input
-  input ProductFilterInput {
-    category: String
-    subcategory: String
-    brand: String
-    minPrice: Float
-    maxPrice: Float
-    inStock: Boolean
-    isFeatured: Boolean
-    tags: [String!]
-    search: String
-  }
-
-  # Sort Options
-  enum ProductSortField {
-    NAME
-    PRICE
-    CREATED_AT
-    UPDATED_AT
-    SALES_COUNT
-    VIEW_COUNT
-    RATING
-  }
-
-  enum SortOrder {
-    ASC
-    DESC
-  }
-
-  input SortInput {
-    field: ProductSortField!
-    order: SortOrder!
-  }
-
-  # Queries
   type Query {
-    # Get single product
-    product(id: ID, slug: String): Product
-
-    # Get products with filters and pagination
-    products(
-      filter: ProductFilterInput
-      sort: SortInput
-      page: Int = 1
+    order(id: ID!): Order
+    myOrders(
+      status: OrderStatus
       limit: Int = 10
-    ): ProductConnection!
-
-    # Get featured products
-    featuredProducts(limit: Int = 10): [Product!]!
-
-    # Get products by category
-    productsByCategory(category: String!, limit: Int = 10): [Product!]!
-
-    # Search products
-    searchProducts(query: String!, limit: Int = 10): [Product!]!
-
-    # Get product categories
-    categories: [String!]!
+      offset: Int = 0
+    ): OrderConnection!
+    orders(
+      status: OrderStatus
+      userId: ID
+      limit: Int = 10
+      offset: Int = 0
+    ): OrderConnection!
   }
 
-  # Mutations
+  type OrderConnection {
+    orders: [Order!]!
+    totalCount: Int!
+    hasMore: Boolean!
+  }
+
   type Mutation {
-    # Create product
-    createProduct(input: CreateProductInput!): Product!
-
-    # Update product
-    updateProduct(id: ID!, input: UpdateProductInput!): Product!
-
-    # Delete product (soft delete)
-    deleteProduct(id: ID!): Boolean!
-
-    # Update stock
-    updateStock(id: ID!, quantity: Int!): Product!
-
-    # Increment view count
-    incrementViewCount(id: ID!): Product!
+    createOrder(input: CreateOrderInput!): Order!
+    updateOrderStatus(id: ID!, input: UpdateOrderStatusInput!): Order!
+    cancelOrder(id: ID!, reason: String): Order!
+    markAsPaid(id: ID!): Order!
+    refundOrder(id: ID!, reason: String): Order!
   }
 `;
 

@@ -1,5 +1,8 @@
+const express = require('express');
 const { ApolloServer } = require('@apollo/server');
-const { startStandaloneServer } = require('@apollo/server/standalone');
+const { expressMiddleware } = require('@apollo/server/express4');
+const { buildSubgraphSchema } = require('@apollo/subgraph');
+const cors = require('cors');
 require('dotenv').config();
 
 const database = require('./config/database');
@@ -13,11 +16,11 @@ async function startServer() {
   // Connect to MongoDB
   await database.connect();
 
-  // Create Apollo Server
+  const app = express();
+
+  // Build federated schema
   const server = new ApolloServer({
-    typeDefs,
-    resolvers: productResolvers,
-    csrfPrevention: false, // Disable CSRF protection for development
+    schema: buildSubgraphSchema({ typeDefs, resolvers: productResolvers }),
     formatError: (error) => {
       console.error('GraphQL Error:', error);
       return {
@@ -27,19 +30,30 @@ async function startServer() {
     },
   });
 
-  // Start Apollo Server with standalone server
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: parseInt(process.env.PORT || '4002') },
-    context: async ({ req }) => ({
-      // Add any context you need here
-      headers: req.headers,
-    }),
+  await server.start();
+
+  app.use(
+    '/graphql',
+    cors(),
+    express.json(),
+    expressMiddleware(server)
+  );
+
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'healthy',
+      service: 'product-service',
+      timestamp: new Date().toISOString(),
+    });
   });
 
-  console.log(`🚀 Product Service ready at ${url}`);
+  const PORT = process.env.PORT || 4002;
+  app.listen(PORT, () => {
+    console.log(`🚀 Product Service ready at http://localhost:${PORT}/graphql`);
+    console.log(`📊 Health check at http://localhost:${PORT}/health`);
+  });
 }
 
-// Handle shutdown gracefully
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, closing server...');
   await database.disconnect();
