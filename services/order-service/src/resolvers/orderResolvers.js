@@ -388,6 +388,42 @@ const orderResolvers = {
       }
     },
   },
+  // Federation resolvers
+  Order: {
+    __resolveReference: async (reference) => {
+      const order = await Order.findByPk(reference.id, {
+        include: [{
+          model: OrderItem,
+          as: 'items',
+        }],
+      });
+      return order;
+    },
+
+    user: (order) => {
+      return { __typename: 'User', id: order.userId };
+    },
+  },
+
+  OrderItem: {
+    product: (orderItem) => {
+      return { __typename: 'Product', id: orderItem.productId };
+    },
+  },
+
+  User: {
+    orders: async (user) => {
+      const orders = await Order.findAll({
+        where: { userId: user.id },
+        include: [{
+          model: OrderItem,
+          as: 'items',
+        }],
+        order: [['createdAt', 'DESC']],
+      });
+      return orders;
+    },
+  },
 };
 
 module.exports = orderResolvers;

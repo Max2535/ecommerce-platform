@@ -1,6 +1,7 @@
 const express = require('express');
 const { ApolloServer } = require('@apollo/server');
-const { expressMiddleware } = require('@as-integrations/express5');
+const { expressMiddleware } = require('@apollo/server/express4');
+const { buildSubgraphSchema } = require('@apollo/subgraph');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -19,10 +20,9 @@ async function startServer() {
   // Create Express app
   const app = express();
 
-  // Create Apollo Server
+  // Build federated schema
   const server = new ApolloServer({
-    typeDefs,
-    resolvers: orderResolvers,
+    schema: buildSubgraphSchema({ typeDefs, resolvers: orderResolvers }),
     formatError: (error) => {
       console.error('GraphQL Error:', error);
       return {
