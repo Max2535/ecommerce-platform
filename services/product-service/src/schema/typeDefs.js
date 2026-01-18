@@ -2,151 +2,189 @@ const { gql } = require('graphql-tag');
 
 const typeDefs = gql`
   extend schema
-    @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable", "@external"])
+    @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"])
 
   scalar DateTime
   scalar JSON
 
-  # Extended types from other services
-  type User @key(fields: "id") {
-    id: ID! @external
-    orders: [Order!]!
-  }
-
+  # Product type - owned by this service
   type Product @key(fields: "id") {
-    id: ID! @external
-  }
-
-  # Order Types
-  type Order @key(fields: "id") {
     id: ID!
-    orderNumber: String!
-    userId: ID!
-    user: User
-    status: OrderStatus!
-    subtotal: Float!
-    tax: Float!
-    shippingCost: Float!
-    discount: Float!
-    totalAmount: Float!
-    shippingAddress: ShippingAddress!
-    paymentMethod: PaymentMethod
-    paymentStatus: PaymentStatus!
-    paidAt: DateTime
-    trackingNumber: String
-    shippedAt: DateTime
-    deliveredAt: DateTime
-    cancelledAt: DateTime
-    cancellationReason: String
-    customerNotes: String
-    internalNotes: String
-    items: [OrderItem!]!
+    name: String!
+    slug: String!
+    description: String!
+    shortDescription: String
+    sku: String!
+    price: Float!
+    compareAtPrice: Float
+    cost: Float
+    category: String!
+    subcategory: String
+    brand: String
+    tags: [String!]
+    images: [ProductImage!]
+    stock: Int!
+    lowStockThreshold: Int
+    weight: Float
+    dimensions: ProductDimensions
+    attributes: JSON
+    isActive: Boolean!
+    isFeatured: Boolean!
+    rating: ProductRating
+    viewCount: Int!
+    salesCount: Int!
     createdAt: DateTime!
     updatedAt: DateTime!
   }
 
-  type OrderItem {
-    id: ID!
-    orderId: ID!
-    productId: ID!
-    product: Product
-    productName: String!
-    productSku: String!
-    productImage: String
-    unitPrice: Float!
-    quantity: Int!
-    subtotal: Float!
-    discount: Float!
-    total: Float!
+  type ProductImage {
+    url: String!
+    alt: String
+    isPrimary: Boolean!
   }
 
-  type ShippingAddress {
-    street: String!
-    city: String!
-    state: String
-    postalCode: String!
-    country: String!
+  type ProductDimensions {
+    length: Float
+    width: Float
+    height: Float
+    unit: String
   }
 
-  enum OrderStatus {
-    PENDING
-    CONFIRMED
-    PROCESSING
-    SHIPPED
-    DELIVERED
-    CANCELLED
-    REFUNDED
+  type ProductRating {
+    average: Float!
+    count: Int!
   }
 
-  enum PaymentMethod {
-    CREDIT_CARD
-    DEBIT_CARD
-    BANK_TRANSFER
-    CASH_ON_DELIVERY
-    E_WALLET
-  }
-
-  enum PaymentStatus {
-    PENDING
-    PAID
-    FAILED
-    REFUNDED
-  }
-
-  input CreateOrderInput {
-    items: [OrderItemInput!]!
-    shippingAddressId: ID
-    shippingAddress: ShippingAddressInput
-    paymentMethod: PaymentMethod!
-    customerNotes: String
-  }
-
-  input OrderItemInput {
-    productId: ID!
-    quantity: Int!
-  }
-
-  input ShippingAddressInput {
-    street: String!
-    city: String!
-    state: String
-    postalCode: String!
-    country: String!
-  }
-
-  input UpdateOrderStatusInput {
-    status: OrderStatus!
-    trackingNumber: String
-    internalNotes: String
-  }
-
-  type Query {
-    order(id: ID!): Order
-    myOrders(
-      status: OrderStatus
-      limit: Int = 10
-      offset: Int = 0
-    ): OrderConnection!
-    orders(
-      status: OrderStatus
-      userId: ID
-      limit: Int = 10
-      offset: Int = 0
-    ): OrderConnection!
-  }
-
-  type OrderConnection {
-    orders: [Order!]!
+  # Connection types for pagination
+  type ProductConnection {
+    edges: [ProductEdge!]!
+    pageInfo: PageInfo!
     totalCount: Int!
-    hasMore: Boolean!
   }
 
+  type ProductEdge {
+    node: Product!
+    cursor: String!
+  }
+
+  type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+  }
+
+  # Input types
+  input ProductFilterInput {
+    category: String
+    subcategory: String
+    brand: String
+    tags: [String!]
+    minPrice: Float
+    maxPrice: Float
+    inStock: Boolean
+    isFeatured: Boolean
+    search: String
+  }
+
+  input ProductSortInput {
+    field: ProductSortField!
+    order: SortOrder!
+  }
+
+  enum ProductSortField {
+    NAME
+    PRICE
+    CREATED_AT
+    UPDATED_AT
+    SALES_COUNT
+    VIEW_COUNT
+    RATING
+  }
+
+  enum SortOrder {
+    ASC
+    DESC
+  }
+
+  input CreateProductInput {
+    name: String!
+    description: String!
+    shortDescription: String
+    sku: String!
+    price: Float!
+    compareAtPrice: Float
+    cost: Float
+    category: String!
+    subcategory: String
+    brand: String
+    tags: [String!]
+    images: [ProductImageInput!]
+    stock: Int!
+    lowStockThreshold: Int
+    weight: Float
+    dimensions: ProductDimensionsInput
+    attributes: JSON
+    isFeatured: Boolean
+  }
+
+  input UpdateProductInput {
+    name: String
+    description: String
+    shortDescription: String
+    sku: String
+    price: Float
+    compareAtPrice: Float
+    cost: Float
+    category: String
+    subcategory: String
+    brand: String
+    tags: [String!]
+    images: [ProductImageInput!]
+    stock: Int
+    lowStockThreshold: Int
+    weight: Float
+    dimensions: ProductDimensionsInput
+    attributes: JSON
+    isActive: Boolean
+    isFeatured: Boolean
+  }
+
+  input ProductImageInput {
+    url: String!
+    alt: String
+    isPrimary: Boolean
+  }
+
+  input ProductDimensionsInput {
+    length: Float
+    width: Float
+    height: Float
+    unit: String
+  }
+
+  # Queries
+  type Query {
+    product(id: ID, slug: String): Product
+    products(
+      filter: ProductFilterInput
+      sort: ProductSortInput
+      page: Int
+      limit: Int
+    ): ProductConnection!
+    featuredProducts(limit: Int): [Product!]!
+    productsByCategory(category: String!, limit: Int): [Product!]!
+    searchProducts(query: String!, limit: Int): [Product!]!
+    categories: [String!]!
+  }
+
+  # Mutations
   type Mutation {
-    createOrder(input: CreateOrderInput!): Order!
-    updateOrderStatus(id: ID!, input: UpdateOrderStatusInput!): Order!
-    cancelOrder(id: ID!, reason: String): Order!
-    markAsPaid(id: ID!): Order!
-    refundOrder(id: ID!, reason: String): Order!
+    createProduct(input: CreateProductInput!): Product!
+    updateProduct(id: ID!, input: UpdateProductInput!): Product!
+    deleteProduct(id: ID!): Boolean!
+    updateStock(id: ID!, quantity: Int!): Product!
+    incrementViewCount(id: ID!): Product!
   }
 `;
 

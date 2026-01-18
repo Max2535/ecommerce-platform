@@ -7,13 +7,6 @@ const productServiceClient = require('../services/productServiceClient');
  * Order Resolvers
  */
 const orderResolvers = {
-  // Field resolvers for Order type
-  Order: {
-    status: (order) => order.status?.toUpperCase(),
-    paymentStatus: (order) => order.paymentStatus?.toUpperCase(),
-    paymentMethod: (order) => order.paymentMethod?.toUpperCase(),
-  },
-
   Query: {
     /**
      * Get single order
@@ -403,6 +396,11 @@ const orderResolvers = {
     user: (order) => {
       return { __typename: 'User', id: order.userId };
     },
+
+    // Field resolvers for enum transformation
+    status: (order) => order.status?.toUpperCase(),
+    paymentStatus: (order) => order.paymentStatus?.toUpperCase(),
+    paymentMethod: (order) => order.paymentMethod?.toUpperCase(),
   },
 
   OrderItem: {

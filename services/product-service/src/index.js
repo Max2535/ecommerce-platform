@@ -1,6 +1,6 @@
 const express = require('express');
 const { ApolloServer } = require('@apollo/server');
-const { expressMiddleware } = require('@apollo/server/express4');
+const { expressMiddleware } = require('@as-integrations/express5');
 const { buildSubgraphSchema } = require('@apollo/subgraph');
 const cors = require('cors');
 require('dotenv').config();

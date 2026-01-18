@@ -1,11 +1,25 @@
 const { gql } = require('graphql-tag');
 
 const typeDefs = gql`
+  extend schema
+    @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable", "@external"])
+
   scalar DateTime
   scalar JSON
 
-  # Order Types
-  type Order {
+  # Extend User type from user-service to add orders field
+  type User @key(fields: "id") {
+    id: ID!
+    orders: [Order!]!
+  }
+
+  # Reference Product type from product-service
+  type Product @key(fields: "id", resolvable: false) {
+    id: ID!
+  }
+
+  # Order Types - owned by this service
+  type Order @key(fields: "id") {
     id: ID!
     orderNumber: String!
     userId: ID!
@@ -35,6 +49,7 @@ const typeDefs = gql`
     id: ID!
     orderId: ID!
     productId: ID!
+    product: Product
     productName: String!
     productSku: String!
     productImage: String

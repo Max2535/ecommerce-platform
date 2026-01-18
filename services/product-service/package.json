@@ -21,6 +21,7 @@
     "dependencies": {
         "@apollo/server": "^5.2.0",
         "@apollo/subgraph": "^2.12.2",
+        "@as-integrations/express5": "^1.1.2",
         "body-parser": "^2.2.2",
         "cors": "^2.8.5",
         "dotenv": "^17.2.3",
