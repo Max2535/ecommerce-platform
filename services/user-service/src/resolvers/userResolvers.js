@@ -325,12 +325,16 @@ const userResolvers = {
    * Field resolvers
    */
   User: {
-    firstName: (parent) => parent.first_name,
-    lastName: (parent) => parent.last_name,
-    isActive: (parent) => parent.is_active,
-    emailVerified: (parent) => parent.email_verified,
-    createdAt: (parent) => parent.created_at,
-    updatedAt: (parent) => parent.updated_at,
+    // Reference resolver for federation
+    __resolveReference: async (reference) => {
+      const result = await pool.query(
+        'SELECT * FROM users WHERE id = $1',
+        [reference.id]
+      );
+
+      return result.rows[0] || null;
+    },
+
     addresses: async (parent) => {
       const result = await pool.query(
         'SELECT * FROM addresses WHERE user_id = $1 ORDER BY is_default DESC, created_at DESC',

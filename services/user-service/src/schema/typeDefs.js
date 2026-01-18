@@ -1,11 +1,14 @@
 const { gql } = require('graphql-tag');
 
 const typeDefs = gql`
-  # Scalar types
+  # Federation directives
+  extend schema
+    @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"])
+
   scalar DateTime
 
-  # User type
-  type User {
+  # User type with @key directive for federation
+  type User @key(fields: "id") {
     id: ID!
     email: String!
     firstName: String
