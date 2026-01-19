@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '@contexts/AuthContext';
 import { useCart } from '@contexts/CartContext';
+import { AnimatedCartIcon } from '@components/common/AddToCartAnimation';
 
 /**
  * Header Component
@@ -108,16 +109,18 @@ const Header = () => {
         </Box>
 
         {/* Cart Icon */}
-        <IconButton
-          color="inherit"
-          component={Link}
-          to="/cart"
-          sx={{ mr: 1 }}
-        >
-          <Badge badgeContent={getItemCount()} color="error">
-            <ShoppingCart />
-          </Badge>
-        </IconButton>
+        <AnimatedCartIcon>
+          <IconButton
+            color="inherit"
+            component={Link}
+            to="/cart"
+            sx={{ mr: 1 }}
+          >
+            <Badge badgeContent={getItemCount()} color="error">
+              <ShoppingCart />
+            </Badge>
+          </IconButton>
+        </AnimatedCartIcon>
 
         {/* User Menu */}
         {isAuthenticated() ? (

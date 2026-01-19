@@ -7,6 +7,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import apolloClient from './config/apollo';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { AddToCartAnimationProvider } from './components/common/AddToCartAnimation';
 
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -65,26 +66,28 @@ function App() {
         <CssBaseline />
         <AuthProvider>
           <CartProvider>
-            <BrowserRouter>
-              <Layout>
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Home />} />
-                  <Route path="/products" element={<ProductListPage />} />
-                  <Route path="/products/:id" element={<ProductDetailPage />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+            <AddToCartAnimationProvider>
+              <BrowserRouter>
+                <Layout>
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Home />} />
+                    <Route path="/products" element={<ProductListPage />} />
+                    <Route path="/products/:id" element={<ProductDetailPage />} />
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
 
-                  {/* Protected Routes */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/orders/:id" element={<Orders />} />
-                  </Route>
-                </Routes>
-              </Layout>
-            </BrowserRouter>
+                    {/* Protected Routes */}
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/orders" element={<Orders />} />
+                      <Route path="/orders/:id" element={<Orders />} />
+                    </Route>
+                  </Routes>
+                </Layout>
+              </BrowserRouter>
+            </AddToCartAnimationProvider>
           </CartProvider>
         </AuthProvider>
       </ThemeProvider>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Card,
@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { ShoppingCart, Visibility } from '@mui/icons-material';
 import { useCart } from '@contexts/CartContext';
+import { useAddToCartAnimation } from '@components/common/AddToCartAnimation';
 import { formatCurrency } from '@utils/formatters';
 
 /**
@@ -21,10 +22,18 @@ import { formatCurrency } from '@utils/formatters';
  */
 const ProductCard = ({ product }) => {
   const { addToCart, isInCart } = useCart();
+  const { triggerAnimation } = useAddToCartAnimation();
+  const buttonRef = useRef(null);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Trigger flying animation
+    if (buttonRef.current) {
+      triggerAnimation(buttonRef.current, product.images[0]?.url);
+    }
+
     addToCart(product, 1);
   };
 
@@ -163,6 +172,7 @@ const ProductCard = ({ product }) => {
       {/* Actions */}
       <CardActions sx={{ p: 2, pt: 0 }}>
         <Button
+          ref={buttonRef}
           fullWidth
           variant={inCartStatus ? 'outlined' : 'contained'}
           startIcon={<ShoppingCart />}

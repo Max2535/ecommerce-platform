@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@apollo/client/react';
 import {
@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { GET_PRODUCT } from '@graphql/queries/products';
 import { useCart } from '@contexts/CartContext';
+import { useAddToCartAnimation } from '@components/common/AddToCartAnimation';
 import { formatCurrency } from '@utils/formatters';
 import Loading from '@components/common/Loading';
 import ErrorMessage from '@components/common/ErrorMessage';
@@ -35,6 +36,8 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { triggerAnimation } = useAddToCartAnimation();
+  const buttonRef = useRef(null);
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -57,8 +60,12 @@ const ProductDetailPage = () => {
     : 0;
 
   const handleAddToCart = () => {
+    // Trigger flying animation
+    if (buttonRef.current) {
+      triggerAnimation(buttonRef.current, product.images[selectedImage]?.url);
+    }
+
     addToCart(product, quantity);
-    navigate('/cart');
   };
 
   const handleQuantityChange = (e) => {
@@ -219,6 +226,7 @@ const ProductDetailPage = () => {
 
           {/* Add to Cart Button */}
           <Button
+            ref={buttonRef}
             fullWidth
             variant="contained"
             size="large"
