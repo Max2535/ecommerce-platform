@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    container_name: ecommerce-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql:
+    image: mysql:8
+    container_name: ecommerce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql_password
+      MYSQL_DATABASE: orderdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-user-service
+    ports:
+      - "4001:4001"
+    environment:
+      NODE_ENV: development
+      PORT: 4001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: userdb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: your-jwt-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/user-service:/app
+      - /app/node_modules
+
+  product-service:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-product-service
+    ports:
+      - "4002:4002"
+    environment:
+      NODE_ENV: development
+      PORT: 4002
+      MONGODB_URI: mongodb://mongodb:27017/productdb
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./services/product-service:/app
+      - /app/node_modules
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-order-service
+    ports:
+      - "4003:4003"
+    environment:
+      NODE_ENV: development
+      PORT: 4003
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: orderdb
+      DB_USER: root
+      DB_PASSWORD: mysql_password
+      USER_SERVICE_URL: http://user-service:4001
+      PRODUCT_SERVICE_URL: http://product-service:4002
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./services/order-service:/app
+      - /app/node_modules
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: ecommerce-api-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      USER_SERVICE_URL: http://user-service:4001/graphql
+      PRODUCT_SERVICE_URL: http://product-service:4002/graphql
+      ORDER_SERVICE_URL: http://order-service:4003/graphql
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+    volumes:
+      - ./services/api-gateway:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  mysql_data:
