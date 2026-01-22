@@ -25,7 +25,7 @@ const typeDefs = gql`
     images: [ProductImage!]
     stock: Int!
     lowStockThreshold: Int
-    weight: Float
+    weight: ProductWeight
     dimensions: ProductDimensions
     attributes: JSON
     isActive: Boolean!
@@ -47,6 +47,11 @@ const typeDefs = gql`
     length: Float
     width: Float
     height: Float
+    unit: String
+  }
+
+  type ProductWeight {
+    value: Float!
     unit: String
   }
 
@@ -122,7 +127,7 @@ const typeDefs = gql`
     images: [ProductImageInput!]
     stock: Int!
     lowStockThreshold: Int
-    weight: Float
+    weight: ProductWeightInput
     dimensions: ProductDimensionsInput
     attributes: JSON
     isFeatured: Boolean
@@ -143,7 +148,7 @@ const typeDefs = gql`
     images: [ProductImageInput!]
     stock: Int
     lowStockThreshold: Int
-    weight: Float
+    weight: ProductWeightInput
     dimensions: ProductDimensionsInput
     attributes: JSON
     isActive: Boolean
@@ -160,6 +165,11 @@ const typeDefs = gql`
     length: Float
     width: Float
     height: Float
+    unit: String
+  }
+
+  input ProductWeightInput {
+    value: Float!
     unit: String
   }
 

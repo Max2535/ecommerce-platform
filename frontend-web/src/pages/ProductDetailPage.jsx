@@ -301,7 +301,7 @@ const ProductDetailPage = () => {
             {product.weight && (
               <TableRow>
                 <TableCell sx={{ fontWeight: 'medium' }}>น้ำหนัก</TableCell>
-                <TableCell>{product.weight} kg</TableCell>
+                <TableCell>{product.weight.value} {product.weight.unit || 'kg'}</TableCell>
               </TableRow>
             )}
             {product.tags && product.tags.length > 0 && (

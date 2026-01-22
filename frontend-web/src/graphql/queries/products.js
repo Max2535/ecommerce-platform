@@ -58,7 +58,10 @@ export const GET_PRODUCT = gql`
       }
       stock
       sku
-      weight
+      weight {
+        value
+        unit
+      }
       dimensions {
         length
         width
