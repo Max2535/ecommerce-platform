@@ -32,21 +32,28 @@ Full-stack e-commerce platform built with microservices architecture using Apoll
 
 | Service | Port | Database | Description |
 |---------|------|----------|-------------|
+| Frontend | 80 | - | React web application |
 | API Gateway | 4000 | - | Apollo Federation Gateway |
 | User Service | 4001 | PostgreSQL | Authentication & user management |
 | Product Service | 4002 | MongoDB | Product catalog & inventory |
 | Order Service | 4003 | MySQL | Order processing & management |
+
+### Docker Containers
+
+| Container | Port | Description |
+|-----------|------|-------------|
+| ecommerce-postgres | 5432 | PostgreSQL 15 (User data) |
+| ecommerce-mongodb | 27017 | MongoDB 7 (Product data) |
+| ecommerce-mysql | 3306 | MySQL 8.0 (Order data) |
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL
-- MongoDB
-- MySQL
+- Docker & Docker Compose
 
-### Installation
+### Quick Start with Docker
 
 1. Clone the repository:
 ```bash
@@ -54,7 +61,26 @@ git clone <repository-url>
 cd ecommerce-platform
 ```
 
-2. Install dependencies for each service:
+2. Start all services:
+```bash
+docker compose up -d
+```
+
+3. Seed the database with test data:
+```bash
+./scripts/seed-data.sh
+```
+
+4. Check service health:
+```bash
+./scripts/health-check.sh
+```
+
+5. Open GraphQL Playground: http://localhost:4000/graphql
+
+### Manual Installation (Development)
+
+1. Install dependencies for each service:
 ```bash
 cd services/user-service && npm install
 cd ../product-service && npm install
@@ -62,13 +88,16 @@ cd ../order-service && npm install
 cd ../api-gateway && npm install
 ```
 
-3. Configure environment variables:
+2. Configure environment variables:
    - Copy `.env.example` to `.env` in each service directory
    - Update database connection strings and other settings
 
-4. Start databases (PostgreSQL, MongoDB, MySQL)
+3. Start databases:
+```bash
+docker compose up -d postgres mongodb mysql
+```
 
-5. Start all services:
+4. Start all services:
 ```bash
 # Terminal 1 - User Service
 cd services/user-service && npm run dev
@@ -82,6 +111,31 @@ cd services/order-service && npm run dev
 # Terminal 4 - API Gateway
 cd services/api-gateway && npm run dev
 ```
+
+## Test Data
+
+After running the seed script, you can use these test accounts:
+
+| Email | Password | Description |
+|-------|----------|-------------|
+| john.doe@example.com | Password123 | User with 2 addresses, 2 orders |
+| jane.smith@example.com | Password123 | User with 1 address, 1 order |
+| bob.wilson@example.com | Password123 | User with 1 address, 1 order |
+| alice.johnson@example.com | Password123 | User with 2 addresses, 1 order |
+| admin@example.com | Password123 | Admin user |
+
+### Sample Products
+
+The seed data includes 15 products across categories:
+- **Electronics**: iPhone 15 Pro Max, Galaxy S24 Ultra, MacBook Pro, Sony WH-1000XM5, AirPods Pro 2
+- **Fashion**: Classic Polo Shirt, Slim Fit Jeans, Floral Summer Dress
+- **Home & Living**: Smart Air Purifier, Ergonomic Office Chair
+- **Sports & Outdoors**: Running Shoes Pro, Yoga Mat Premium
+- **Beauty**: Vitamin C Serum
+
+### Sample Orders
+
+5 orders with different statuses: Delivered, Shipped, Processing, Pending, Cancelled
 
 ### API Endpoints
 
@@ -202,6 +256,19 @@ Include the JWT token in the Authorization header for protected queries:
 Authorization: Bearer <your-jwt-token>
 ```
 
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `./scripts/seed-data.sh` | Seed all databases with test data |
+| `./scripts/health-check.sh` | Check health status of all services |
+
+### Seed Data Files
+
+- `scripts/seed-data/users.sql` - PostgreSQL seed (users & addresses)
+- `scripts/seed-data/products.js` - MongoDB seed (products)
+- `scripts/seed-data/orders.sql` - MySQL seed (orders & items)
+
 ## Project Structure
 
 ```
@@ -211,9 +278,13 @@ ecommerce-platform/
 │   ├── user-service/       # User authentication & management
 │   ├── product-service/    # Product catalog
 │   └── order-service/      # Order processing
-├── docs/
-│   ├── SETUP.md
-│   └── ARCHITECTURE.md
+├── frontend-web/           # React frontend (Vite)
+├── scripts/
+│   ├── seed-data.sh        # Main seed runner
+│   ├── health-check.sh     # Service health checker
+│   └── seed-data/          # Database seed files
+├── docker-compose.yml      # Production compose
+├── docker-compose.dev.yml  # Development compose
 └── README.md
 ```
 
