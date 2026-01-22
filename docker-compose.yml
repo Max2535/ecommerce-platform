@@ -133,6 +133,30 @@ services:
       - ./services/api-gateway:/app
       - /app/node_modules
 
+  # Test runner for user-service
+  user-service-test:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-user-service-test
+    environment:
+      NODE_ENV: test
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: userdb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: test-jwt-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/user-service:/app
+      - /app/node_modules
+    command: npm test
+    profiles:
+      - test
+
 volumes:
   postgres_data:
   mongodb_data:
