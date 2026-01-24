@@ -1,0 +1,63 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: local
+
+resources:
+  - namespace.yaml
+  - secrets.yaml
+  - ../databases/postgres.yaml
+  - ../databases/mongodb.yaml
+  - ../databases/mysql.yaml
+  - ../user-service/service.yaml
+  - ../user-service/deployment.yaml
+  - ../product-service/service.yaml
+  - ../product-service/deployment.yaml
+  - ../order-service/service.yaml
+  - ../order-service/deployment.yaml
+  - ../api-gateway/service.yaml
+  - ../api-gateway/deployment.yaml
+  - ../frontend/service.yaml
+  - ../frontend/deployment.yaml
+
+# Override images to use locally built ones
+images:
+  - name: ghcr.io/ecommerce-platform/user-service
+    newName: user-service
+    newTag: local
+  - name: ghcr.io/ecommerce-platform/product-service
+    newName: product-service
+    newTag: local
+  - name: ghcr.io/ecommerce-platform/order-service
+    newName: order-service
+    newTag: local
+  - name: ghcr.io/ecommerce-platform/api-gateway
+    newName: api-gateway
+    newTag: local
+  - name: ghcr.io/ecommerce-platform/frontend
+    newName: frontend
+    newTag: local
+
+# Patch deployments for local development
+patches:
+  # Remove imagePullSecrets for local
+  - patch: |-
+      - op: remove
+        path: /spec/template/spec/imagePullSecrets
+    target:
+      kind: Deployment
+      name: user-service
+  # Change imagePullPolicy to Never for local images
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+    target:
+      kind: Deployment
+  # Reduce replicas for local
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
