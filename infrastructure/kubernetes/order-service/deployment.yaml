@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: https://ghcr.io/order-service:latest
+        image: ghcr.io/ecommerce-platform/order-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4003

@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: https://ghcr.io/api-gateway:latest
+        image: ghcr.io/ecommerce-platform/api-gateway:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4000

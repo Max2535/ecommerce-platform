@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: user-service
-        image: https://ghcr.io/user-service:latest
+        image: ghcr.io/ecommerce-platform/user-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4001

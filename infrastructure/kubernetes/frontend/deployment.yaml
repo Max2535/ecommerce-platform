@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: https://ghcr.io/frontend:latest
+        image: ghcr.io/ecommerce-platform/frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
