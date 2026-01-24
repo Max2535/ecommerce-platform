@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: production
+  labels:
+    app: order-service
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+        tier: backend
+    spec:
+      containers:
+      - name: order-service
+        image: https://ghcr.io/order-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4003
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "4003"
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: db-host
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: db-name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: db-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: db-password
+        - name: USER_SERVICE_URL
+          value: "http://user-service:4001/graphql"
+        - name: PRODUCT_SERVICE_URL
+          value: "http://product-service:4002/graphql"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4003
+          initialDelaySeconds: 10
+          periodSeconds: 5

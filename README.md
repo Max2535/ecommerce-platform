@@ -260,8 +260,13 @@ Authorization: Bearer <your-jwt-token>
 
 | Script | Description |
 |--------|-------------|
+| `./scripts/start-all.sh` | Start all Docker services |
+| `./scripts/stop-all.sh` | Stop all Docker services |
 | `./scripts/seed-data.sh` | Seed all databases with test data |
 | `./scripts/health-check.sh` | Check health status of all services |
+| `./scripts/deploy-k8s.sh` | Deploy to Kubernetes cluster |
+| `./scripts/deploy-complete.sh` | Full deployment with RBAC & monitoring |
+| `./scripts/smoke-tests.sh` | Run smoke tests on deployed services |
 
 ### Seed Data Files
 
@@ -269,22 +274,129 @@ Authorization: Bearer <your-jwt-token>
 - `scripts/seed-data/products.js` - MongoDB seed (products)
 - `scripts/seed-data/orders.sql` - MySQL seed (orders & items)
 
+## CI/CD Pipeline
+
+This project includes a Jenkins pipeline for automated build and deployment.
+
+### Jenkins Setup
+
+1. Start Jenkins:
+```bash
+docker-compose -f infrastructure/jenkins/docker-compose.jenkins.yml up -d
+```
+
+2. Access Jenkins at `http://localhost:8080`
+
+3. Configure required credentials:
+   - `docker-registry-credentials` - Docker registry login
+   - `kubeconfig-file` - Kubernetes config file
+
+### Pipeline Features
+
+- Automatic change detection (builds only affected services)
+- Parallel test execution
+- Docker image build and push
+- Kubernetes deployment
+- Smoke tests after deployment
+- Slack notifications
+- Production deployment approval
+
+### Trigger Deployment
+
+```bash
+# Deploy to development
+git push origin develop
+
+# Deploy to staging
+git push origin staging
+
+# Deploy to production (requires manual approval)
+git push origin main
+```
+
+## Kubernetes Deployment
+
+### Prerequisites
+
+- Kubernetes cluster (GKE, EKS, AKS, or Minikube)
+- kubectl configured
+- Container registry access
+
+### Deploy to Kubernetes
+
+```bash
+# Quick deployment
+./scripts/deploy-k8s.sh production
+
+# Full deployment with monitoring
+./scripts/deploy-complete.sh production
+
+# Run smoke tests
+./scripts/smoke-tests.sh production
+```
+
+### Check Deployment Status
+
+```bash
+# View pods
+kubectl get pods -n production
+
+# View services
+kubectl get services -n production
+
+# Check HPA status
+kubectl get hpa -n production
+```
+
+### Infrastructure Components
+
+| Component | Description |
+|-----------|-------------|
+| Namespaces | development, staging, production, monitoring |
+| Databases | PostgreSQL, MongoDB, MySQL StatefulSets |
+| Services | ClusterIP services for internal communication |
+| Ingress | Frontend ingress with TLS |
+| HPA | Auto-scaling for all services |
+| Network Policies | Secure service-to-service communication |
+| Monitoring | Prometheus & Grafana |
+
 ## Project Structure
 
 ```
 ecommerce-platform/
 ├── services/
-│   ├── api-gateway/        # Apollo Federation Gateway
-│   ├── user-service/       # User authentication & management
-│   ├── product-service/    # Product catalog
-│   └── order-service/      # Order processing
-├── frontend-web/           # React frontend (Vite)
+│   ├── api-gateway/          # Apollo Federation Gateway
+│   ├── user-service/         # User authentication & management
+│   ├── product-service/      # Product catalog
+│   └── order-service/        # Order processing
+├── frontend-web/             # React frontend (Vite)
+├── infrastructure/
+│   ├── jenkins/              # Jenkins Docker Compose
+│   └── kubernetes/
+│       ├── api-gateway/      # API Gateway K8s manifests
+│       ├── user-service/     # User Service K8s manifests
+│       ├── product-service/  # Product Service K8s manifests
+│       ├── order-service/    # Order Service K8s manifests
+│       ├── frontend/         # Frontend K8s manifests
+│       ├── databases/        # Database StatefulSets
+│       ├── monitoring/       # Prometheus & Grafana
+│       ├── namespaces/       # Environment namespaces
+│       ├── network-policies/ # Network security policies
+│       └── rbac/             # Service accounts & roles
 ├── scripts/
-│   ├── seed-data.sh        # Main seed runner
-│   ├── health-check.sh     # Service health checker
-│   └── seed-data/          # Database seed files
-├── docker-compose.yml      # Production compose
-├── docker-compose.dev.yml  # Development compose
+│   ├── start-all.sh          # Start all services
+│   ├── stop-all.sh           # Stop all services
+│   ├── seed-data.sh          # Main seed runner
+│   ├── health-check.sh       # Service health checker
+│   ├── deploy-k8s.sh         # Kubernetes deployment
+│   ├── deploy-complete.sh    # Full deployment script
+│   ├── smoke-tests.sh        # Post-deployment tests
+│   └── seed-data/            # Database seed files
+├── docs/
+│   └── DEPLOYMENT.md         # Deployment documentation
+├── docker-compose.yml        # Production compose
+├── docker-compose.dev.yml    # Development compose
+├── Jenkinsfile               # CI/CD pipeline definition
 └── README.md
 ```
 
@@ -295,6 +407,10 @@ The services use Apollo Federation v2.3 with the following entity relationships:
 - **User** (owned by user-service, extended by order-service with `orders` field)
 - **Product** (owned by product-service, referenced by order-service)
 - **Order** (owned by order-service)
+
+## Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT.md) - Detailed deployment instructions for local, Docker, and Kubernetes
 
 ## License
 

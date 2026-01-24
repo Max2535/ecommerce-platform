@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: production
+  labels:
+    app: product-service
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+        tier: backend
+    spec:
+      containers:
+      - name: product-service
+        image: https://ghcr.io/product-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4002
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "4002"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: product-service-secrets
+              key: mongodb-uri
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4002
+          initialDelaySeconds: 10
+          periodSeconds: 5
